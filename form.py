@@ -1,23 +1,49 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from PyQt5.QtWidgets import QMessageBox
 from time import sleep
 
-setWorkTime = 0
+# setWorkTime = 0
 setInterval = 0
 op = 0
+execStatus = 0
+text = 'Tempo de trabalho/estudo ecenrrado, hora do intervalo'
 
 class intervalCounter(QObject):
     finished = pyqtSignal()
     # progress = pyqtSignal(int)
 
     def run(self):
-        """Long-running task."""
-        global setWorkTime, setInterval, op;
-        for i in range(setWorkTime):
-            sleep(1)
+        global setInterval;
+        for i in range(setInterval):
+            sleep(60)
             print(f'Counter: {i}')
             # self.progress.emit(i + 1)
-        print('finished taks')
+        self.finished.emit()
+
+class showModal(QObject):
+    finished = pyqtSignal()
+
+    def run(self):
+        global text, execStatus;
+        print('show Modal')
+        msg = QMessageBox()
+        msg.setIcon(msg.Information)
+        msg.setWindowTitle("Success")
+        msg.setText(text)
+        msg.setMinimumWidth(350)
+        msg.addButton('Encerrar execução', QMessageBox.YesRole)
+        msg.addButton(QMessageBox.Ok)
+
+        bttn = msg.exec_()
+
+        if bttn == QMessageBox.Ok:
+            print('ok')
+            execStatus = 0
+        else:
+            print('finish exec')
+            execStatus = 1
+
         self.finished.emit()
 
 class Ui_MainWindow(object):
@@ -104,30 +130,26 @@ class Ui_MainWindow(object):
         self.startButton.clicked.connect(self.startWorkCycle)
 
     def startWorkCycle(self):
-        global setWorkTime, setInterval, op;
-        setWorkTime = int(self.worTime.text())
-        setInterval = int(self.intervalTime.text())
-        # Step 2: Create a QThread object
-        self.thread = QThread()
-        # Step 3: Create a intervalCounter object
-        self.intervalCounter = intervalCounter()
-        # Step 4: Move intervalCounter to the thread
-        self.intervalCounter.moveToThread(self.thread)
+        global setInterval;
 
-        # Step 5: Connect signals and slots
-        self.thread.started.connect(self.intervalCounter.run)
+        setInterval = int(self.worTime.text())
+        self.startFirstThread()
 
-        # Step 6: Finish thread when recive signal for finish
-        self.intervalCounter.finished.connect(self.thread.quit)
+    def startFirstThread(self):
+        global execStatus;
+        # setInterval = int(self.intervalTime.text())
 
-        # Step 7: Delete work and objects
-        self.intervalCounter.finished.connect(self.intervalCounter.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-
-        # self.intervalCounter.progress.connect(self.reportProgress)
-
-        # Step 8: Start the thread
-        self.thread.start()
+        if execStatus == 0:
+            # Start and finish first thread
+            self.thread = QThread()
+            self.intervalCounter = intervalCounter()
+            self.intervalCounter.moveToThread(self.thread)
+            self.thread.started.connect(self.intervalCounter.run)
+            self.intervalCounter.finished.connect(self.thread.quit)
+            self.intervalCounter.finished.connect(self.intervalCounter.deleteLater)
+            self.intervalCounter.finished.connect(self.startSecondThread)
+            self.thread.finished.connect(self.thread.deleteLater)
+            self.thread.start()
 
         # Final resets
         # self.longRunningBtn.setEnabled(False)
@@ -137,6 +159,30 @@ class Ui_MainWindow(object):
         # self.thread.finished.connect(
         #     lambda: self.stepLabel.setText("Long-Running Step: 0")
         # )
+
+    def startSecondThread(self):
+        global setInterval, execStatus, op;
+
+        # Start and Finish sencond Thread
+        self.threadtwo = QThread()
+        self.showModal = showModal()
+        self.showModal.moveToThread(self.threadtwo)
+        self.threadtwo.started.connect(self.showModal.run)
+        self.showModal.finished.connect(self.threadtwo.quit),
+        self.showModal.finished.connect(self.showModal.deleteLater)
+
+        if execStatus == 0:
+            self.showModal.finished.connect(self.startFirstThread)
+            if op == 0:
+                setInterval = int(self.intervalTime.text())
+                op = 1
+            else:
+                setInterval = int(self.worTime.text())
+                op = 0
+
+        self.threadtwo.finished.connect(self.threadtwo.deleteLater)
+        self.threadtwo.start()
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
