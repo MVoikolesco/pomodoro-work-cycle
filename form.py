@@ -11,14 +11,13 @@ text = 'Tempo de trabalho/estudo ecenrrado, hora do intervalo'
 
 class intervalCounter(QObject):
     finished = pyqtSignal()
-    # progress = pyqtSignal(int)
+    progress = pyqtSignal(int)
 
     def run(self):
         global setInterval;
-        for i in range(setInterval):
+        for i in range(1, setInterval+1):
             sleep(60)
-            print(f'Counter: {i}')
-            # self.progress.emit(i + 1)
+            self.progress.emit(i)
         self.finished.emit()
 
 class showModal(QObject):
@@ -26,7 +25,6 @@ class showModal(QObject):
 
     def run(self):
         global text, execStatus;
-        print('show Modal')
         msg = QMessageBox()
         msg.setIcon(msg.Information)
         msg.setWindowTitle("Success")
@@ -38,10 +36,8 @@ class showModal(QObject):
         bttn = msg.exec_()
 
         if bttn == QMessageBox.Ok:
-            print('ok')
             execStatus = 0
         else:
-            print('finish exec')
             execStatus = 1
 
         self.finished.emit()
@@ -60,8 +56,8 @@ class Ui_MainWindow(object):
         self.startButton.setMinimumSize(QtCore.QSize(125, 35))
         self.startButton.setMaximumSize(QtCore.QSize(125, 35))
         self.startButton.setStyleSheet("border: 0;\n"
-"background-color: rgb(62, 100, 254);\n"
-"color: #fff;")
+            "background-color: rgb(62, 100, 254);\n"
+            "color: #fff;")
         self.startButton.setAutoDefault(False)
         self.startButton.setDefault(False)
         self.startButton.setFlat(False)
@@ -71,8 +67,8 @@ class Ui_MainWindow(object):
         self.finishButton.setMinimumSize(QtCore.QSize(125, 35))
         self.finishButton.setMaximumSize(QtCore.QSize(125, 35))
         self.finishButton.setStyleSheet("border: 0;\n"
-"background-color: rgb(62, 100, 254);\n"
-"color: #fff;")
+            "background-color: rgb(62, 100, 254);\n"
+            "color: #fff;")
         self.finishButton.setAutoDefault(False)
         self.finishButton.setDefault(False)
         self.finishButton.setFlat(False)
@@ -80,27 +76,36 @@ class Ui_MainWindow(object):
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
         self.progressBar.setGeometry(QtCore.QRect(20, 300, 251, 21))
         self.progressBar.setStatusTip("")
-        self.progressBar.setStyleSheet("border: 0;\n"
-"background-color: #cecfcf;\n"
-"text-align: center;\n"
-"color: #fff;")
+        self.progressBar.setStyleSheet("QProgressBar {\n"
+            "    background-color: #cecfcf;\n"
+            "    text-align: center;\n"
+            "    color: #fff;\n"
+            "    border: none;\n"
+            "    border-radius: none;\n"
+            "    font-size: 14px;\n"
+            "}\n"
+            "QProgressBar::chunk {\n"
+            "    border-radius: none;\n"
+            "    border: none;\n"
+            "    background-color: rgb(62, 100, 254);\n"
+            "}")
         self.progressBar.setTextVisible(True)
         self.progressBar.setInvertedAppearance(False)
         self.progressBar.setObjectName("progressBar")
         self.worTime = QtWidgets.QLineEdit(self.centralwidget)
         self.worTime.setGeometry(QtCore.QRect(20, 100, 261, 31))
         self.worTime.setStyleSheet("background-color: #cecfcf;\n"
-"border-color: rgb(99, 99, 99);\n"
-"color: #3e64fe;\n"
-"border-radius: 0;")
+            "border-color: rgb(99, 99, 99);\n"
+            "color: #000;\n"
+            "border-radius: 0;")
         self.worTime.setText("")
         self.worTime.setObjectName("worTime")
         self.intervalTime = QtWidgets.QLineEdit(self.centralwidget)
         self.intervalTime.setGeometry(QtCore.QRect(20, 190, 261, 31))
         self.intervalTime.setStyleSheet("background-color: #cecfcf;\n"
-"border-color: rgb(99, 99, 99);\n"
-"color: #3e64fe;\n"
-"border-radius: 0;")
+            "border-color: rgb(99, 99, 99);\n"
+            "color: #000;\n"
+            "border-radius: 0;")
         self.intervalTime.setText("")
         self.intervalTime.setObjectName("intervalTime")
         self.label = QtWidgets.QLabel(self.centralwidget)
@@ -135,9 +140,12 @@ class Ui_MainWindow(object):
         setInterval = int(self.worTime.text())
         self.startFirstThread()
 
+    def reportProgress(self, n):
+        global setInterval
+        self.progressBar.setValue((n/setInterval)*100)
+
     def startFirstThread(self):
         global execStatus;
-        # setInterval = int(self.intervalTime.text())
 
         if execStatus == 0:
             # Start and finish first thread
@@ -151,14 +159,7 @@ class Ui_MainWindow(object):
             self.thread.finished.connect(self.thread.deleteLater)
             self.thread.start()
 
-        # Final resets
-        # self.longRunningBtn.setEnabled(False)
-        # self.thread.finished.connect(
-        #     lambda: self.longRunningBtn.setEnabled(True)
-        # )
-        # self.thread.finished.connect(
-        #     lambda: self.stepLabel.setText("Long-Running Step: 0")
-        # )
+            self.intervalCounter.progress.connect(self.reportProgress)
 
     def startSecondThread(self):
         global setInterval, execStatus, op;
