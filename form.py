@@ -1,5 +1,24 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from time import sleep
 
+setWorkTime = 0
+setInterval = 0
+op = 0
+
+class intervalCounter(QObject):
+    finished = pyqtSignal()
+    # progress = pyqtSignal(int)
+
+    def run(self):
+        """Long-running task."""
+        global setWorkTime, setInterval, op;
+        for i in range(setWorkTime):
+            sleep(1)
+            print(f'Counter: {i}')
+            # self.progress.emit(i + 1)
+        print('finished taks')
+        self.finished.emit()
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -81,6 +100,43 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.finishButton.clicked.connect(MainWindow.close)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+        self.startButton.clicked.connect(self.startWorkCycle)
+
+    def startWorkCycle(self):
+        global setWorkTime, setInterval, op;
+        setWorkTime = int(self.worTime.text())
+        setInterval = int(self.intervalTime.text())
+        # Step 2: Create a QThread object
+        self.thread = QThread()
+        # Step 3: Create a intervalCounter object
+        self.intervalCounter = intervalCounter()
+        # Step 4: Move intervalCounter to the thread
+        self.intervalCounter.moveToThread(self.thread)
+
+        # Step 5: Connect signals and slots
+        self.thread.started.connect(self.intervalCounter.run)
+
+        # Step 6: Finish thread when recive signal for finish
+        self.intervalCounter.finished.connect(self.thread.quit)
+
+        # Step 7: Delete work and objects
+        self.intervalCounter.finished.connect(self.intervalCounter.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+
+        # self.intervalCounter.progress.connect(self.reportProgress)
+
+        # Step 8: Start the thread
+        self.thread.start()
+
+        # Final resets
+        # self.longRunningBtn.setEnabled(False)
+        # self.thread.finished.connect(
+        #     lambda: self.longRunningBtn.setEnabled(True)
+        # )
+        # self.thread.finished.connect(
+        #     lambda: self.stepLabel.setText("Long-Running Step: 0")
+        # )
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
