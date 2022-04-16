@@ -3,7 +3,6 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal
 from PyQt5.QtWidgets import QMessageBox
 from time import sleep
 
-# setWorkTime = 0
 setInterval = 0
 op = 0
 execStatus = 0
@@ -16,7 +15,7 @@ class intervalCounter(QObject):
     def run(self):
         global setInterval;
         for i in range(1, setInterval+1):
-            sleep(60)
+            sleep(1)
             self.progress.emit(i)
         self.finished.emit()
 
@@ -92,14 +91,14 @@ class Ui_MainWindow(object):
         self.progressBar.setTextVisible(True)
         self.progressBar.setInvertedAppearance(False)
         self.progressBar.setObjectName("progressBar")
-        self.worTime = QtWidgets.QLineEdit(self.centralwidget)
-        self.worTime.setGeometry(QtCore.QRect(20, 100, 261, 31))
-        self.worTime.setStyleSheet("background-color: #cecfcf;\n"
+        self.workTime = QtWidgets.QLineEdit(self.centralwidget)
+        self.workTime.setGeometry(QtCore.QRect(20, 100, 261, 31))
+        self.workTime.setStyleSheet("background-color: #cecfcf;\n"
             "border-color: rgb(99, 99, 99);\n"
             "color: #000;\n"
             "border-radius: 0;")
-        self.worTime.setText("")
-        self.worTime.setObjectName("worTime")
+        self.workTime.setText("")
+        self.workTime.setObjectName("workTime")
         self.intervalTime = QtWidgets.QLineEdit(self.centralwidget)
         self.intervalTime.setGeometry(QtCore.QRect(20, 190, 261, 31))
         self.intervalTime.setStyleSheet("background-color: #cecfcf;\n"
@@ -137,7 +136,7 @@ class Ui_MainWindow(object):
     def startWorkCycle(self):
         global setInterval;
 
-        setInterval = int(self.worTime.text())
+        setInterval = int(self.workTime.text())
         self.startFirstThread()
 
     def reportProgress(self, n):
@@ -178,7 +177,7 @@ class Ui_MainWindow(object):
                 setInterval = int(self.intervalTime.text())
                 op = 1
             else:
-                setInterval = int(self.worTime.text())
+                setInterval = int(self.workTime.text())
                 op = 0
 
         self.threadtwo.finished.connect(self.threadtwo.deleteLater)
