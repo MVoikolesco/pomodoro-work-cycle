@@ -7,15 +7,16 @@ setInterval = 0
 op = 0
 execStatus = 0
 text = ''
+sleepTime = 0
 
 class intervalCounter(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(int)
 
     def run(self):
-        global setInterval;
+        global setInterval, sleepTime;
         for i in range(1, setInterval+1):
-            sleep(1)
+            sleep(sleepTime)
             self.progress.emit(i)
         self.finished.emit()
 
@@ -44,19 +45,32 @@ class showModal(QObject):
 class Ui_MainWindow(object):
 
     def run(self, MainWindow):
+        global sleepTime
         try:
-            with open('docs/conf.txt', 'r') as ref_file:
-                for line in ref_file:
-                    val = line.split()
-                    if val[0] == 'lang':
-                        self.lang = val[1]
+            with open('docs/conf_old.txt', 'r') as ref_file:
+                self.setUserConf(ref_file)
                 ref_file.close()
         except:
-            file = open('docs/conf.txt', 'w+')
-            file.writelines('lang en_US')
-            file.close()
+            with open('docs/conf_old.txt', 'w+') as ref_file:
+                ref_file.writelines('lang en_US\n'
+                                    'sleep 60')
+                ref_file.close()
+                self.getUserConf()
         finally:
             self.setupUi(MainWindow)
+
+    def getUserConf(self):
+        with open('docs/conf_old.txt', 'r') as ref_file:
+            self.setUserConf(ref_file)
+            ref_file.close()
+
+    def setUserConf(self, ref_file):
+        for line in ref_file:
+            val = line.split()
+            if val[0] == 'lang':
+                self.lang = val[1]
+            elif val[0] == 'sleep':
+                sleepTime = int(val[1])
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
