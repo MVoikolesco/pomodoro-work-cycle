@@ -6,7 +6,7 @@ from time import sleep
 setInterval = 0
 op = 0
 execStatus = 0
-text = 'Tempo de trabalho/estudo ecenrrado, hora do intervalo'
+text = ''
 
 class intervalCounter(QObject):
     finished = pyqtSignal()
@@ -42,6 +42,22 @@ class showModal(QObject):
         self.finished.emit()
 
 class Ui_MainWindow(object):
+
+    def run(self, MainWindow):
+        try:
+            with open('docs/conf.txt', 'r') as ref_file:
+                for line in ref_file:
+                    val = line.split()
+                    if val[0] == 'lang':
+                        self.lang = val[1]
+                ref_file.close()
+        except:
+            file = open('docs/conf.txt', 'w+')
+            file.writelines('lang en_US')
+            file.close()
+        finally:
+            self.setupUi(MainWindow)
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(300, 400)
@@ -134,10 +150,15 @@ class Ui_MainWindow(object):
         self.startButton.clicked.connect(self.startWorkCycle)
 
     def startWorkCycle(self):
-        global setInterval;
+        global setInterval, text;
 
-        setInterval = int(self.workTime.text())
-        self.startFirstThread()
+        try:
+            setInterval = int(self.workTime.text())
+            text = self.finishWorkTime
+            self.startFirstThread()
+        except:
+            print('não utilizar valor nulo')
+
 
     def reportProgress(self, n):
         global setInterval
@@ -161,7 +182,7 @@ class Ui_MainWindow(object):
             self.intervalCounter.progress.connect(self.reportProgress)
 
     def startSecondThread(self):
-        global setInterval, execStatus, op;
+        global setInterval, execStatus, op, text;
 
         # Start and Finish sencond Thread
         self.threadtwo = QThread()
@@ -175,9 +196,11 @@ class Ui_MainWindow(object):
             self.showModal.finished.connect(self.startFirstThread)
             if op == 0:
                 setInterval = int(self.intervalTime.text())
+                text = self.finishIntervalTime
                 op = 1
             else:
                 setInterval = int(self.workTime.text())
+                text = self.finishWorkTime
                 op = 0
 
         self.threadtwo.finished.connect(self.threadtwo.deleteLater)
@@ -186,17 +209,28 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.startButton.setText(_translate("MainWindow", "Start"))
-        self.finishButton.setText(_translate("MainWindow", "Finish"))
-        self.label.setText(_translate("MainWindow", "Tempo de Trabalho"))
-        self.label_2.setText(_translate("MainWindow", "Tempo de Intervalo"))
+        if self.lang == 'pt_BR':
+            MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+            self.startButton.setText(_translate("MainWindow", "Iniciar"))
+            self.finishButton.setText(_translate("MainWindow", "Encerrar"))
+            self.label.setText(_translate("MainWindow", "Tempo de Trabalho"))
+            self.label_2.setText(_translate("MainWindow", "Tempo de Intervalo"))
+            self.finishWorkTime = 'Tempo de trabalho/estudo encerrado, hora do intervalo'
+            self.finishIntervalTime = 'Tempo de intervalo encerrado, hora e trabalhar/estudar'
+        else:
+            MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+            self.startButton.setText(_translate("MainWindow", "Start"))
+            self.finishButton.setText(_translate("MainWindow", "Finish"))
+            self.label.setText(_translate("MainWindow", "Work Time"))
+            self.label_2.setText(_translate("MainWindow", "Interval Time"))
+            self.finishWorkTime = 'End of work/study time, break time'
+            self.finishIntervalTime = 'Break time ended, time to work/study'
 
 if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
     Principal = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
-    ui.setupUi(Principal)
+    ui.run(Principal)
     Principal.show()
     sys.exit(app.exec_())
