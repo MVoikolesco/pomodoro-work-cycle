@@ -47,11 +47,11 @@ class Ui_MainWindow(object):
     def run(self, MainWindow):
         global sleepTime
         try:
-            with open('docs/conf_old.txt', 'r') as ref_file:
+            with open('docs/conf.txt', 'r') as ref_file:
                 self.setUserConf(ref_file)
                 ref_file.close()
         except:
-            with open('docs/conf_old.txt', 'w+') as ref_file:
+            with open('docs/conf.txt', 'w+') as ref_file:
                 ref_file.writelines('lang en_US\n'
                                     'sleep 60')
                 ref_file.close()
@@ -60,7 +60,7 @@ class Ui_MainWindow(object):
             self.setupUi(MainWindow)
 
     def getUserConf(self):
-        with open('docs/conf_old.txt', 'r') as ref_file:
+        with open('docs/conf.txt', 'r') as ref_file:
             self.setUserConf(ref_file)
             ref_file.close()
 
