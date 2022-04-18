@@ -10,7 +10,7 @@
   sudo apt install -y python-pyqt5 # Python 2
 
   # gtts
-  pip install gtts
+  pip install gTTS
   python -m pip install --upgrade gtts
   python -m pip install --upgrade gtts-token
 
