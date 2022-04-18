@@ -250,7 +250,8 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         if self.lang == 'pt_BR':
-            MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+            MainWindow.setWindowTitle(_translate("MainWindow", "Pomodoro Tech"))
+            MainWindow.setWindowIcon(QtGui.QIcon('docs/pomodoro-tech.png'))
             self.startButton.setText(_translate("MainWindow", "Iniciar"))
             self.finishButton.setText(_translate("MainWindow", "Encerrar"))
             self.label.setText(_translate("MainWindow", "Tempo de Trabalho"))
@@ -258,7 +259,8 @@ class Ui_MainWindow(object):
             self.finishWorkTime = 'Tempo de trabalho/estudo encerrado, hora do intervalo'
             self.finishIntervalTime = 'Tempo de intervalo encerrado, hora e trabalhar/estudar'
         else:
-            MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+            MainWindow.setWindowTitle(_translate("MainWindow", "Pomodoro Tech"))
+            MainWindow.setWindowIcon(QtGui.QIcon('docs/pomodoro-tech.png'))
             self.startButton.setText(_translate("MainWindow", "Start"))
             self.finishButton.setText(_translate("MainWindow", "Finish"))
             self.label.setText(_translate("MainWindow", "Work Time"))
