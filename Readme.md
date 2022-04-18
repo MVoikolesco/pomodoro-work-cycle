@@ -1,23 +1,21 @@
 ## Install libs
 
-for python3
-
 ```bash
-  sudo apt install -y python3-pyqt5
-  python3 -m pip install gTTS  
+  # pip
+  sudo apt install -y python-pip
+  pip install --user --upgrade pip
+
+  # PyQt5
+  pip install PyQt5 # Python 3
+  sudo apt install -y python-pyqt5 # Python 2
+
+  # gtts
+  pip install gtts
   python -m pip install --upgrade gtts
   python -m pip install --upgrade gtts-token
-  sudo apt install -y python-pip && pip install playsound 
-```
 
-for python2
-
-```bash
-  sudo apt install -y python-pyqt5
-  sudo apt install -y python-gtts  
-  python -m pip install --upgrade gtts
-  python -m pip install --upgrade gtts-token
-  sudo apt install -y python-pip && pip install playsound
+  # playsound
+  pip install playsound
 ```
 
 <hr/>
@@ -25,4 +23,14 @@ for python2
 ## Run
 ```bash
   python main.py
+```
+
+## Create terminal command
+```bash
+  sudo ln -s /var/www/pomodoro-work-cycle/run.sh /usr/local/bin/pomodoro-tech
+```
+
+## Run as a process
+```bash
+  pomodoro-tech &
 ```
