@@ -179,7 +179,7 @@ class Ui_MainWindow(object):
 
     def reportProgress(self, n):
         global setInterval
-        self.progressBar.setValue((n/setInterval)*100)
+        self.progressBar.setValue(int(n/setInterval)*100)
 
     def startFirstThread(self):
         global execStatus;
