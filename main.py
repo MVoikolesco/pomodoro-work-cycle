@@ -4,12 +4,31 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 from PyQt5.QtWidgets import QMessageBox
 from time import sleep
+from os.path import exists
+from gtts import gTTS
+from playsound import playsound
 
 setInterval = 0
 op = 0
 execStatus = 0
 text = ''
 sleepTime = 0
+audioBreak='docs/coffe-break.mp3'
+audioWork='docs/return-to-job.mp3'
+_lang='en-us'
+
+def createAudio(fileName, _text):
+    sp = gTTS(
+        text=_text,
+        lang=_lang
+    )
+    sp.save(fileName)
+    
+if not exists(audioBreak):
+    createAudio(audioBreak, 'Make a coffe break')
+    
+if not exists(audioWork):
+    createAudio(audioWork, 'Return to job')
 
 class intervalCounter(QObject):
     finished = pyqtSignal()
@@ -201,7 +220,7 @@ class Ui_MainWindow(object):
             self.intervalCounter.progress.connect(self.reportProgress)
 
     def startSecondThread(self):
-        global setInterval, execStatus, op, text;
+        global setInterval, execStatus, op, text, audioBreak, audioWork;
 
         # Start and Finish sencond Thread
         self.threadtwo = QThread()
@@ -217,10 +236,12 @@ class Ui_MainWindow(object):
                 setInterval = int(self.intervalTime.text())
                 text = self.finishIntervalTime
                 op = 1
+                playsound(audioBreak)
             else:
                 setInterval = int(self.workTime.text())
                 text = self.finishWorkTime
                 op = 0
+                playsound(audioWork)               
 
         self.threadtwo.finished.connect(self.threadtwo.deleteLater)
         self.threadtwo.start()
