@@ -67,6 +67,7 @@ class Ui_MainWindow(object):
             ref_file.close()
 
     def setUserConf(self, ref_file):
+        global sleepTime
         for line in ref_file:
             val = line.split()
             if val[0] == 'lang':
