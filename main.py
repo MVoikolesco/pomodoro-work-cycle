@@ -23,29 +23,32 @@ def createAudio(fileName, _text):
         lang=_lang
     )
     sp.save(fileName)
-    
+
 if not exists(audioBreak):
     createAudio(audioBreak, 'Make a coffe break')
-    
+
 if not exists(audioWork):
     createAudio(audioWork, 'Return to job')
 
-class intervalCounter(QObject):
+class run_longTask(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(int)
+    intervalFinished = pyqtSignal()
 
-    def run(self):
-        global setInterval, sleepTime;
+    def setIntervalCounter(self):
+        global setInterval;
+
+        time = int(self.getConfigVariables(prop='sleep'))
+
         for i in range(1, setInterval+1):
-            sleep(sleepTime)
+            sleep(time)
             self.progress.emit(i)
-        self.finished.emit()
+        self.intervalFinished.emit()
+        self.showMessageBox()
 
-class showModal(QObject):
-    finished = pyqtSignal()
+    def showMessageBox(self):
+        global execStatus, text;
 
-    def run(self):
-        global text, execStatus;
         msg = QMessageBox()
         msg.setIcon(msg.Information)
         msg.setWindowTitle("Success")
@@ -58,10 +61,21 @@ class showModal(QObject):
 
         if bttn == QMessageBox.Ok:
             execStatus = 0
+            self.setIntervalCounter()
         else:
+            self.finished.emit()
             execStatus = 1
 
-        self.finished.emit()
+    def getConfigVariables(self, prop):
+        try:
+            with open('docs/conf.txt', 'r') as config_file:
+                for i in config_file:
+                    val = i.split()
+                    if val[0] == prop:
+                        return val[1]
+                config_file.close()
+        except:
+            print('except')
 
 class Ui_MainWindow(object):
 
@@ -69,30 +83,14 @@ class Ui_MainWindow(object):
         global sleepTime
         try:
             with open('docs/conf.txt', 'r') as ref_file:
-                self.setUserConf(ref_file)
                 ref_file.close()
         except:
             with open('docs/conf.txt', 'w+') as ref_file:
                 ref_file.writelines('lang en_US\n'
                                     'sleep 60')
                 ref_file.close()
-                self.getUserConf()
         finally:
             self.setupUi(MainWindow)
-
-    def getUserConf(self):
-        with open('docs/conf.txt', 'r') as ref_file:
-            self.setUserConf(ref_file)
-            ref_file.close()
-
-    def setUserConf(self, ref_file):
-        global sleepTime
-        for line in ref_file:
-            val = line.split()
-            if val[0] == 'lang':
-                self.lang = val[1]
-            elif val[0] == 'sleep':
-                sleepTime = int(val[1])
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -199,39 +197,47 @@ class Ui_MainWindow(object):
     def reportProgress(self, n):
         global setInterval
         progress = (float(n) / float(setInterval)) * 100
-        self.progressBar.setValue(progress)
+        self.progressBar.setValue(int(progress))
 
 
     def startFirstThread(self):
         global execStatus;
 
-        if execStatus == 0:
-            # Start and finish first thread
-            self.thread = QThread()
-            self.intervalCounter = intervalCounter()
-            self.intervalCounter.moveToThread(self.thread)
-            self.thread.started.connect(self.intervalCounter.run)
-            self.intervalCounter.finished.connect(self.thread.quit)
-            self.intervalCounter.finished.connect(self.intervalCounter.deleteLater)
-            self.intervalCounter.finished.connect(self.startSecondThread)
-            self.thread.finished.connect(self.thread.deleteLater)
-            self.thread.start()
+        self.thread = QThread()
+        self.run_longTask = run_longTask()
+        self.run_longTask.moveToThread(self.thread)
+        self.thread.started.connect(self.run_longTask.setIntervalCounter)
+        self.run_longTask.finished.connect(self.thread.quit)
+        self.run_longTask.finished.connect(self.run_longTask.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.run_longTask.progress.connect(self.reportProgress)
+        self.thread.start()
 
-            self.intervalCounter.progress.connect(self.reportProgress)
+        self.run_longTask.intervalFinished.connect(self.changeOperation)
 
-    def startSecondThread(self):
+        self.disableTemplate()
+        self.run_longTask.finished.connect(self.setDefaultTemplate)
+
+    def disableTemplate(self):
+        self.startButton.setEnabled(False)
+        self.startButton.setStyleSheet("border: 0;\n"
+           "background-color: #cecfcf;\n"
+           "color: #000;")
+        self.workTime.setEnabled(False)
+        self.intervalTime.setEnabled(False)
+
+    def setDefaultTemplate(self):
+        lambda: self.startButton.setEnabled(True)
+        lambda: self.startButton.setStyleSheet("border: 0;\n"
+           "background-color: rgb(62, 100, 254);\n"
+           "color: #fff;")
+        lambda: self.workTime.setEnabled(True)
+        lambda: self.intervalTime.setEnabled(True)
+
+    def changeOperation(self):
         global setInterval, execStatus, op, text, audioBreak, audioWork;
 
-        # Start and Finish sencond Thread
-        self.threadtwo = QThread()
-        self.showModal = showModal()
-        self.showModal.moveToThread(self.threadtwo)
-        self.threadtwo.started.connect(self.showModal.run)
-        self.showModal.finished.connect(self.threadtwo.quit),
-        self.showModal.finished.connect(self.showModal.deleteLater)
-
         if execStatus == 0:
-            self.showModal.finished.connect(self.startFirstThread)
             if op == 0:
                 setInterval = int(self.intervalTime.text())
                 text = self.finishIntervalTime
@@ -241,15 +247,13 @@ class Ui_MainWindow(object):
                 setInterval = int(self.workTime.text())
                 text = self.finishWorkTime
                 op = 0
-                playsound(audioWork)               
-
-        self.threadtwo.finished.connect(self.threadtwo.deleteLater)
-        self.threadtwo.start()
-
+                playsound(audioWork)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        if self.lang == 'pt_BR':
+        self.run_longTask = run_longTask()
+        lang = self.run_longTask.getConfigVariables(prop='lang')
+        if lang == 'pt_BR':
             MainWindow.setWindowTitle(_translate("MainWindow", "Pomodoro Tech"))
             MainWindow.setWindowIcon(QtGui.QIcon('docs/pomodoro-tech.png'))
             self.startButton.setText(_translate("MainWindow", "Iniciar"))
